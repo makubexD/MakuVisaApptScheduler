@@ -4,3 +4,4 @@ requests
 configparser
 tqdm
 fake_useragent
+logging

@@ -9,6 +9,10 @@ from driver_instance import driver
 import requests
 from utils.sleep_progress_bar import smart_sleep
 from browser.actions import click_element_by_class, wait_for_element_by_xpath, check_element_exists
+import logging
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 
 def reschedule(date):
     time_slot = get_time(date)
@@ -34,23 +38,44 @@ def reschedule(date):
         "appointments[consulate_appointment][time]": time_slot,
     }
 
-    print("After building data in RESCHEDULE method")
+    logging.info("Built request data successfully")
+
     headers = {
         "User-Agent": driver.execute_script("return navigator.userAgent;"),
         "Referer": APPOINTMENT_URL,
         "Cookie": "_yatri_session=" + driver.get_cookie("_yatri_session")["value"]
     }
 
-    print("After building headers in RESCHEDULE method")
+    logging.info("Built headers successfully")
     
-    r = requests.post(APPOINTMENT_URL, headers=headers, data=data)    
+    # r = requests.post(APPOINTMENT_URL, headers=headers, data=data)    
 
-    if 'Successfully Scheduled' in r.text:
-        msg = f"✅ Rescheduled Successfully! {date} {time_slot}"
+    # if 'Successfully Scheduled' in r.text:
+    #     msg = f"✅ Rescheduled Successfully! {date} {time_slot}"
+    #     send_notification(msg)
+    # else:
+    #     msg = f"❌ Reschedule Failed. {date} {time_slot}"
+    #     send_notification(msg)
+
+    try:
+        r = requests.post(APPOINTMENT_URL, headers=headers, data=data, timeout=10)
+        logging.info(f"HTTP {r.status_code} - Response: {r}")  # Log status code & first 500 chars
+
+        if r.status_code == 200:
+            msg = f"✅ Rescheduled Successfully! {date} {time_slot}"
+        else:
+            msg = f"❌ Reschedule Failed. HTTP {r.status_code}. Response: {r}"
+
         send_notification(msg)
-    else:
-        msg = f"❌ Reschedule Failed. {date} {time_slot}"
+
+    except Exception as e:        
+        msg = f"🚨 Request Error: {str(e)}"
+        logging.error(msg)
         send_notification(msg)
+
+        import traceback
+        print("Traceback:")
+        traceback.print_exc()
 
 def schedule():
     retry_count = 0
