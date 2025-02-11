@@ -1,0 +1,29 @@
+name: Run Maku Visa Appt Scheduler Script
+
+on:
+  push:
+    branches:
+      - main  # Run the workflow when pushing to the main branch
+  workflow_dispatch:  # Allows manual execution from GitHub Actions
+
+jobs:
+  run-python-script:
+    runs-on: ubuntu-latest  # Uses GitHub's Linux runner
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3  # Fetch the repository code
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # Adjust the version as needed
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r src/requirements.txt
+          fi
+
+      - name: Run Python script
+        run: python src/main.py  # Replace with your actual script
